@@ -1,0 +1,47 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.camera-stage {
+    border: 2px dashed #cbd5e1;
+    border-radius: 16px;
+    background: #f8fafc;
+    padding: 12px;
+}
+
+#cameraPreview {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    background: #0f172a;
+    border: 3px solid #10b981;
+    border-radius: 12px;
+}
+
+#imagePreview {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+#cameraControls button {
+    transition: 0.2s ease;
+}
+
+#cameraControls button:hover {
+    opacity: 0.85;
+}
+
+#bananaVariety {
+    color: #047857;
+}
+
+@keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
+}
