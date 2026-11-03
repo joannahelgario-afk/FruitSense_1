@@ -2,46 +2,136 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-.camera-stage {
-    border: 2px dashed #cbd5e1;
-    border-radius: 16px;
-    background: #f8fafc;
-    padding: 12px;
+* {
+    box-sizing: border-box;
 }
 
-#cameraPreview {
+button {
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.preview-box {
     width: 100%;
-    max-height: 320px;
-    object-fit: contain;
-    background: #0f172a;
-    border: 3px solid #10b981;
-    border-radius: 12px;
+    min-height: 370px;
 }
 
-#imagePreview {
-    max-width: 100%;
-    max-height: 320px;
-    object-fit: contain;
-    border-radius: 12px;
+#imagePreview,
+#webcamPreview {
+    max-height: 340px;
 }
 
-#cameraControls button {
-    transition: 0.2s ease;
+.loading-spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid #d1fae5;
+    border-top-color: #059669;
+    border-radius: 50%;
+    animation: fruitsense-spin 0.8s linear infinite;
 }
 
-#cameraControls button:hover {
-    opacity: 0.85;
+.button-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 9px;
+    border: 2px solid #a7f3d0;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: fruitsense-spin 0.8s linear infinite;
+    vertical-align: middle;
 }
 
-#bananaVariety {
-    color: #047857;
+@keyframes fruitsense-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes pulse-subtle {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.55;
+    }
 }
 
-.animate-pulse-subtle {
-    animation: pulse-subtle 2s ease-in-out infinite;
+.animate-pulse {
+    animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+#scientificName {
+    line-height: 1.5;
+}
+
+#classBreakdownContainer > div {
+    min-width: 0;
+}
+
+#classBreakdownContainer span {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+    header .max-w-6xl {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    header h1 {
+        font-size: 1rem;
+    }
+
+    header p {
+        font-size: 0.7rem;
+    }
+
+    header .h-12 {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    main {
+        padding: 1.5rem 1rem;
+    }
+
+    .preview-box {
+        min-height: 280px;
+    }
+
+    #imagePreview,
+    #webcamPreview {
+        max-height: 280px;
+    }
+
+    section {
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner,
+    .button-spinner,
+    .animate-pulse {
+        animation-duration: 2s;
+    }
+
+    button {
+        transition: none;
+    }
 }
