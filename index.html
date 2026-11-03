@@ -1,240 +1,212 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>FruitSense: Enterprise AI-Based Fruit Ripeness Detection System</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 </head>
 
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
 
-    <header class="bg-white border-b border-slate-200">
-        <div class="max-w-6xl mx-auto px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+<header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="h-12 w-12 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-sm">
+                FS
+            </div>
             <div>
-                <h1 class="text-2xl font-bold text-emerald-700">FruitSense</h1>
-                <p class="text-sm text-slate-500">
-                    AI-Based Fruit Ripeness Detection System
-                </p>
+                <h1 class="text-xl font-bold tracking-tight">
+                    FruitSense
+                    <span class="text-emerald-600 font-semibold text-xs ml-1 px-2 py-1 bg-emerald-50 rounded-full border border-emerald-200">AI Pro</span>
+                </h1>
+                <p class="text-sm text-slate-500">Advanced Ripeness &amp; Quality Analytics</p>
+            </div>
+        </div>
+
+        <span id="modelStatus"
+              class="inline-flex items-center px-3 py-2 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+            <span class="status-dot bg-amber-500 animate-pulse"></span>
+            Loading Model...
+        </span>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8 w-full flex-grow">
+
+    <div class="mb-7 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold tracking-tight">Banana Batch Inspection</h2>
+            <p class="text-base text-slate-500 mt-2">
+                Capture a live photo or upload an image file to analyze banana ripeness.
+            </p>
+        </div>
+
+        <div class="text-sm text-slate-400 bg-white px-4 py-3 rounded-xl border border-slate-200">
+            Target Spec:
+            <span class="font-semibold text-slate-700">Cavendish / Saba Standard</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+
+        <!-- UPLOAD PANEL -->
+        <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <button type="button" id="uploadButton"
+                    class="flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium py-4 px-3 rounded-xl border border-slate-200 text-sm">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Upload File
+                </button>
+
+                <button type="button" id="openCameraButton"
+                    class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-4 px-3 rounded-xl text-sm shadow-sm">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Take Photo
+                </button>
             </div>
 
-            <span id="modelStatus"
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                Loading Model...
-            </span>
-        </div>
-    </header>
+            <input type="file" id="imageUpload" accept="image/*" class="hidden">
+            <input type="file" id="cameraCapture" accept="image/*" capture="environment" class="hidden">
 
-    <main class="max-w-6xl mx-auto px-6 py-8">
+            <div id="previewContainer"
+                 class="preview-box border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 flex flex-col items-center justify-center relative overflow-hidden">
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-            <!-- IMAGE INPUT SECTION -->
-            <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-
-                <h2 class="text-lg font-bold mb-2">Fruit Image Input</h2>
-                <p class="text-sm text-slate-500 mb-6">
-                    Upload a banana image or use your device camera.
-                </p>
-
-                <!-- Camera and Upload Buttons -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-
-                    <label for="imageUpload"
-                        class="cursor-pointer text-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl">
-                        Upload Image
-                    </label>
-
-                    <input
-                        type="file"
-                        id="imageUpload"
-                        accept="image/*"
-                        class="hidden"
-                        onchange="processFile(this.files[0])">
-
-                    <button
-                        type="button"
-                        onclick="startCamera()"
-                        class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl">
-                        Open Camera
-                    </button>
-
-                </div>
-
-                <!-- Image Preview -->
-                <div id="previewContainer"
-                    class="hidden relative w-full overflow-hidden rounded-xl bg-slate-100">
-
-                    <img
-                        id="imagePreview"
-                        alt="Uploaded banana preview"
-                        class="hidden w-full max-h-80 object-contain">
-
-                    <video
-                        id="cameraPreview"
-                        autoplay
-                        playsinline
-                        muted
-                        class="hidden w-full max-h-80 object-contain">
-                    </video>
-
-                </div>
-
-                <!-- Camera Controls -->
-                <div id="cameraControls" class="hidden grid grid-cols-2 gap-3 mt-4">
-
-                    <button
-                        type="button"
-                        onclick="capturePhoto()"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl">
-                        Capture Photo
-                    </button>
-
-                    <button
-                        type="button"
-                        onclick="stopCamera()"
-                        class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold py-3 px-4 rounded-xl">
-                        Close Camera
-                    </button>
-
-                </div>
-
-                <!-- Analysis and Reset Buttons -->
-                <button
-                    id="classifyBtn"
-                    type="button"
-                    onclick="runAnalysis()"
-                    disabled
-                    class="mt-5 w-full bg-slate-100 text-slate-400 font-semibold py-3.5 px-4 rounded-xl cursor-not-allowed">
-
-                    <span id="btnText">Run Inference Analysis</span>
-
-                </button>
-
-                <button
-                    type="button"
-                    onclick="resetUpload()"
-                    class="mt-3 w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-3 px-4 rounded-xl">
-                    Reset
-                </button>
-
-                <p class="text-xs text-slate-400 mt-4">
-                    Note: Camera access may require permission and a secure connection
-                    (HTTPS or localhost).
-                </p>
-
-            </section>
-
-            <!-- RESULTS SECTION -->
-            <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-
-                <h2 class="text-lg font-bold mb-2">Analysis Results</h2>
-                <p class="text-sm text-slate-500 mb-6">
-                    AI prediction of banana variety and ripeness.
-                </p>
-
-                <!-- Empty Results -->
-                <div id="resultPlaceholder"
-                    class="rounded-xl bg-slate-50 border border-dashed border-slate-300 p-10 text-center">
-
-                    <div class="text-4xl mb-3">🍌</div>
-
-                    <p class="font-semibold text-slate-600">
-                        No Analysis Yet
-                    </p>
-
-                    <p class="text-sm text-slate-400 mt-1">
-                        Upload an image or capture a photo to begin.
-                    </p>
-
-                </div>
-
-                <!-- Prediction Results -->
-                <div id="resultData" class="hidden">
-
-                    <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-5 mb-5">
-
-                        <p class="text-sm text-emerald-700 font-medium">
-                            Predicted Class
-                        </p>
-
-                        <h3 id="predictedClass"
-                            class="text-2xl font-bold text-emerald-800 mt-1">
-                            -
-                        </h3>
-
-                        <p class="text-sm text-slate-600 mt-3">
-                            Confidence:
-                            <span id="topConfidence" class="font-bold">-</span>
-                        </p>
-
+                <div id="uploadPrompt" class="space-y-4 py-10">
+                    <div class="h-20 w-20 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                        <svg class="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
                     </div>
-
-                    <!-- Banana Variety -->
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                        <p class="text-sm text-slate-500">Banana Variety</p>
-                        <p id="bananaVariety" class="text-lg font-bold mt-1">-</p>
-                    </div>
-
-                    <!-- Ripeness -->
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                        <p class="text-sm text-slate-500">Ripeness Level</p>
-                        <p id="ripenessText" class="text-lg font-bold mt-1">-</p>
-                    </div>
-
-                    <!-- Quality Status -->
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                        <p class="text-sm text-slate-500">Quality Status</p>
-                        <p id="qualityStatusText" class="font-semibold mt-1">-</p>
-                    </div>
-
-                    <!-- Estimated Shelf Life -->
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                        <p class="text-sm text-slate-500">Estimated Shelf Life</p>
-                        <p id="shelfLifeText" class="font-semibold mt-1">-</p>
-                    </div>
-
-                    <!-- Storage Advice -->
-                    <div class="rounded-xl bg-amber-50 border border-amber-100 p-4 mb-5">
-                        <p class="text-sm font-semibold text-amber-800 mb-1">
-                            Storage Recommendation
-                        </p>
-                        <p id="storageTip" class="text-sm text-amber-900">-</p>
-                    </div>
-
-                    <!-- Prediction Breakdown -->
                     <div>
-                        <h3 class="font-semibold mb-3">Prediction Breakdown</h3>
-                        <div id="classBreakdownContainer" class="space-y-3"></div>
+                        <p class="text-base font-semibold text-slate-700">Awaiting Sample Input</p>
+                        <p class="text-sm text-slate-400 mt-2">Take a picture or upload a high-resolution sample</p>
                     </div>
-
-                    <p id="timestampBadge" class="hidden text-xs text-slate-400 mt-5">
-                        Analysis completed.
-                    </p>
-
                 </div>
 
-            </section>
+                <img id="imagePreview" class="hidden max-h-80 w-full rounded-lg object-contain" alt="Sample preview">
 
-        </div>
+                <video id="webcamPreview" class="hidden max-h-80 w-full rounded-lg object-contain"
+                       autoplay playsinline muted></video>
+            </div>
 
-    </main>
+            <div id="cameraControls" class="hidden flex gap-3 mt-3">
+                <button type="button" id="captureButton"
+                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-medium">
+                    Capture Photo
+                </button>
+                <button type="button" id="stopCameraButton"
+                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl text-sm font-medium">
+                    Stop Camera
+                </button>
+            </div>
 
-    <footer class="text-center text-xs text-slate-400 py-6">
-        FruitSense — AI-Based Fruit Ripeness Detection System
-    </footer>
+            <p id="cameraMessage" class="hidden text-xs text-rose-600 mt-3" role="alert"></p>
 
-    <script src="script.js"></script>
+            <div class="mt-5 flex justify-between items-center text-xs text-slate-400 gap-3">
+                <span>Engine: TensorFlow.js &bull; Teachable Machine</span>
+                <button type="button" id="clearButton" class="underline hover:text-slate-700 font-medium">
+                    Clear Sample
+                </button>
+            </div>
+        </section>
+
+        <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col min-h-[510px]">
+
+            <div class="flex justify-between items-center mb-5 border-b border-slate-100 pb-4 gap-3">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">
+                    Inference Output &amp; Metrics
+                </h3>
+                <span id="timestampBadge" class="text-xs text-slate-400 hidden"></span>
+            </div>
+
+            <div id="resultPlaceholder"
+                 class="flex-grow min-h-64 text-slate-400 text-sm text-center flex flex-col items-center justify-center py-10">
+                <div class="h-16 w-16 rounded-full bg-slate-100 text-slate-300 flex items-center justify-center mb-4">
+                    <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <p class="text-base">Run analysis to evaluate ripeness levels.</p>
+            </div>
+
+            <div id="analysisLoading"
+                 class="hidden flex-grow min-h-64 text-center flex-col items-center justify-center py-10"
+                 role="status" aria-live="polite">
+                <div class="loading-spinner mb-4"></div>
+                <p class="text-sm font-semibold text-slate-700">Analyzing banana sample...</p>
+                <p class="text-xs text-slate-400 mt-2">Please wait while the model processes the image.</p>
+            </div>
+
+            <div id="resultData" class="hidden space-y-5 flex-grow">
+
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 rounded-xl p-5 flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide block">
+                            Primary Classification
+                        </span>
+                        <h4 id="predictedClass" class="text-xl md:text-2xl font-extrabold text-slate-900 mt-2 break-words">-</h4>
+                        <p id="scientificName" class="text-xs text-slate-500 mt-1 italic"></p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide block">Confidence</span>
+                        <span id="topConfidence" class="text-2xl font-bold text-emerald-600 block mt-1">-</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-3">
+                        Confidence Breakdown
+                    </span>
+                    <div id="classBreakdownContainer" class="space-y-3"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-2">Estimated Shelf Life</span>
+                        <p id="shelfLifeText" class="text-sm font-semibold text-slate-800">-</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-2">Quality Status</span>
+                        <p id="qualityStatusText" class="text-sm font-semibold text-slate-800">-</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50/70 border border-amber-200/70 rounded-xl p-4">
+                    <span class="text-xs font-bold text-amber-800 uppercase tracking-wide block mb-2">
+                        Recommended Action &amp; Storage
+                    </span>
+                    <p id="storageTip" class="text-sm text-amber-900 leading-relaxed">-</p>
+                </div>
+            </div>
+
+            <button id="classifyBtn" type="button" disabled
+                class="mt-6 w-full bg-slate-100 text-slate-400 font-semibold py-4 px-4 rounded-xl text-sm flex items-center justify-center">
+                <span id="btnText">Run Inference Analysis</span>
+            </button>
+        </section>
+    </div>
+</main>
+
+<footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-6xl mx-auto px-6 text-center text-xs text-slate-400">
+        FruitSense Enterprise AI &bull; Application Development Prototype
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
-```
